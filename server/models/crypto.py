@@ -14,6 +14,15 @@ class Crypto(db.Model, SerializerMixin):
     image_url = db.Column(db.String, nullable=False)
     price = db.Column(db.Float)
 
+    serialize_rules = (
+        '-trades.user', 
+        '-trades.crypto', 
+        '-holdings.user',
+        '-holdings.crypto',
+        '-watchlists.user', 
+        '-watchlists.crypto', 
+    )  
+
     # One-to-many relationships
     trades = db.relationship('Trade', back_populates='crypto', cascade="all, delete-orphan")
     holdings = db.relationship('Holding', back_populates='crypto', cascade="all, delete-orphan")

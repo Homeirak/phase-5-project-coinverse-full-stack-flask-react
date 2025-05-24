@@ -15,6 +15,19 @@ class Trade(db.Model, SerializerMixin):
     price = db.Column(db.Float)
     quantity = db.Column(db.Float)
     timestamp = db.Column(db.DateTime, nullable=False)
+    # New fields for advanced order types
+    status = db.Column(db.String, default="pending")  # "pending", "executed", "cancelled"
+    order_type = db.Column(db.String, default="market")  # "market", "limit", "stop-limit"
+    limit_price = db.Column(db.Float, nullable=True)     # For limit/stop-limit orders
+
+    serialize_rules = (
+        '-user.trades',  
+        '-user.holdings',
+        '-user.watchlists',
+        '-crypto.trades',
+        '-crypto.holdings',
+        '-crypto.watchlists',
+    )
 
     # Relationships
     user = db.relationship('User', back_populates='trades')
