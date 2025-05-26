@@ -11,10 +11,10 @@ class Crypto(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     coingecko_id = db.Column(db.String, nullable=True)
     name = db.Column(db.String, nullable=False)
-    symbol = db.Column(db.String, nullable=True)
-    image_url = db.Column(db.String, nullable=False)
-    price = db.Column(db.Float)
-    
+    symbol = db.Column(db.String, nullable=False)
+    image_url = db.Column(db.String, nullable=True)
+    current_price = db.Column(db.Float)
+    market_cap = db.Column(db.Float)
 
     serialize_rules = (
         '-trades.user', 

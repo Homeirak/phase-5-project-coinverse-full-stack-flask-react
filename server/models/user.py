@@ -1,5 +1,6 @@
 # User.py
 import re
+import json
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
 from sqlalchemy_serializer import SerializerMixin
@@ -14,6 +15,11 @@ class User(db.Model, SerializerMixin):
     _password_hash = db.Column("password_hash", db.String, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     usd_balance = db.Column(db.Float, default=0.0)
+    name = db.Column(db.String)
+    theme = db.Column(db.String, default="light")  
+    billing_address = db.Column(db.String)
+    payment_info = db.Column(db.String) 
+    stripe_customer_id = db.Column(db.String, unique=True)
 
     @hybrid_property
     def password_hash(self):
@@ -26,9 +32,20 @@ class User(db.Model, SerializerMixin):
     def check_password(self, password):
         return bcrypt.check_password_hash(self._password_hash, password)
 
-    # serialization rules
-    # excludes password hash from serialization
-    # password has only a field in the user model
+    # Helper property for payment_info as JSON
+    @property
+    def payment_info_json(self):
+        if self.payment_info:
+            try:
+                return json.loads(self.payment_info)
+            except Exception:
+                return {}
+        return {}
+
+    @payment_info_json.setter
+    def payment_info_json(self, value):
+        self.payment_info = json.dumps(value)
+
     serialize_rules = (
         '-_password_hash', 
         '-password_hash', 
