@@ -3,3 +3,4 @@ from .crypto import Crypto
 from .holding import Holding
 from .trade import Trade
 from .watchlist import Watchlist
+from .portfolio_snapshot import PortfolioSnapshot
