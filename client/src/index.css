@@ -66,3 +66,24 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* to remove the right border (pipe) between ButtonGroup buttons */
+.MuiButtonGroup-root .MuiButtonGroup-firstButton,
+.MuiButtonGroup-root .MuiButtonGroup-middleButton {
+  border-right: none !important;
+}
+
+/* Stronger selector to remove the right border (pipe) between ButtonGroup buttons */
+.MuiButtonGroup-root .MuiButtonGroup-grouped:not(:last-of-type) {
+  border-right: none !important;
+}
+
+/* Universal override for MUI ButtonGroup right border */
+button[class*="MuiButtonGroup-grouped"]:not(:last-of-type) {
+  border-right: none !important;
+}
+
+button[class*="MuiButtonGroup-grouped"] {
+  border-right: none !important;
+  border-left: none !important;
+}

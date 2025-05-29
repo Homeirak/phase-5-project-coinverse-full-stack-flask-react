@@ -18,6 +18,8 @@ class ProfileResource(Resource):
             "name": user.name,
             "username": user.user_name,  
             "email": user.email,
+            "usd_balance": user.usd_balance,
+            "usd_balance_formatted": user.usd_balance_formatted,
             "theme": user.theme or "light",
             "billing_address": user.billing_address,
             "payment_info": user.payment_info,  # e.g. last 4 digits, type, etc.
@@ -43,13 +45,23 @@ class ProfileResource(Resource):
         if "billing_address" in data:
             user.billing_address = data["billing_address"]
         if "payment_info" in data:
-            user.payment_info = data["payment_info"]  # Should be a dict or string
+            user.payment_info = data["payment_info"]  
         if "theme" in data:
-            user.theme = data["theme"]  # "light" or "dark"
+            user.theme = data["theme"]  
 
         try:
             db.session.commit()
-            return {"message": "Profile updated successfully"}, 200
+            # return the full user object, just like in GET
+            return {
+                "name": user.name,
+                "username": user.user_name,
+                "email": user.email,
+                "usd_balance": user.usd_balance,
+                "usd_balance_formatted": user.usd_balance_formatted,
+                "theme": user.theme or "light",
+                "billing_address": user.billing_address,
+                "payment_info": user.payment_info,
+            }, 200
         except Exception as e:
             logger.error(f"Error updating profile: {e}", exc_info=True)
             db.session.rollback()

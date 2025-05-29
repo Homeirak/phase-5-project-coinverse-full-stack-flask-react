@@ -41,9 +41,14 @@ class RegistrationResource(Resource):
         new_user = User(
             user_name=user_name,
             email=email,
-            usd_balance=0.0  # Default balance on registration
+            usd_balance=data.get('usd_balance', 0.0),  
+            name=data.get('name'),
+            theme=data.get('theme', 'light'),
+            billing_address=data.get('billing_address'),
+            payment_info=data.get('payment_info'),
+            stripe_customer_id=data.get('stripe_customer_id')
         )
-        new_user.password_hash = password  # Hash and store the password
+        new_user.password_hash = password
 
         db.session.add(new_user)
         db.session.commit()

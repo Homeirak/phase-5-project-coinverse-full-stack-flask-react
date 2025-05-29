@@ -8,7 +8,7 @@ cryptos = [
     ("Tether USDt", "USDT", None),
     ("XRP", "XRP", None),
     ("Binance Coin", "BNB", None),
-    ("Solana", "SOL", None),
+    ("Solana", "SOL", "https://s2.coinmarketcap.com/static/img/coins/64x64/5426.png"),
     ("USD Coin", "USDC", None),
     ("Cardano", "ADA", None),
     ("Dogecoin", "DOGE", None),

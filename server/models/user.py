@@ -46,6 +46,11 @@ class User(db.Model, SerializerMixin):
     def payment_info_json(self, value):
         self.payment_info = json.dumps(value)
 
+    @property
+    def usd_balance_formatted(self):
+        # Returns the balance as a string with commas and two decimal places
+        return f"{self.usd_balance:,.2f}"
+
     serialize_rules = (
         '-_password_hash', 
         '-password_hash', 

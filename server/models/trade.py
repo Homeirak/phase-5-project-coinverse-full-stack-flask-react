@@ -12,7 +12,7 @@ class Trade(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     crypto_id = db.Column(db.Integer, db.ForeignKey('cryptos.id'))
     action = db.Column(db.String)  # "buy" or "sell"
-    amount = db.Column(db.Float)
+    quantity = db.Column(db.Float)  # changed from amount
     price_at_trade = db.Column(db.Float)
     order_type = db.Column(db.String)  # "market", "limit", "stop-limit"
     limit_price = db.Column(db.Float)
@@ -40,7 +40,7 @@ class Trade(db.Model, SerializerMixin):
             raise ValueError("Action must be 'buy' or 'sell'")
         return value
 
-    @validates('amount', 'price_at_trade', 'limit_price', 'stop_price')
+    @validates('quantity', 'price_at_trade', 'limit_price', 'stop_price')  # changed from amount
     def validate_positive(self, key, value):
         if value is not None and value < 0:
             raise ValueError(f"{key.capitalize()} must be non-negative")
