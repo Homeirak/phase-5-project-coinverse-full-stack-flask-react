@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box, TextField, Button, Alert } from "@mui/material";
 
-function DepositForm() {
+function WithdrawForm() {
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState(null);
 
@@ -9,7 +9,7 @@ function DepositForm() {
     e.preventDefault();
     setStatus(null);
     try {
-      const res = await fetch("/api/deposit", {
+      const res = await fetch("/api/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: parseFloat(amount) }),
@@ -18,10 +18,10 @@ function DepositForm() {
       const data = await res.json();
       if (res.ok) {
         const formattedBalance = Number(data.usd_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        setStatus({ type: "success", message: `Deposit successful! New balance: $${formattedBalance}` });
+        setStatus({ type: "success", message: `Withdrawal successful! New balance: $${formattedBalance}` });
         setAmount("");
       } else {
-        setStatus({ type: "error", message: data.error || "Deposit failed." });
+        setStatus({ type: "error", message: data.error || "Withdrawal failed." });
       }
     } catch {
       setStatus({ type: "error", message: "Network error." });
@@ -41,7 +41,7 @@ function DepositForm() {
         sx={{ mb: 2 }}
       />
       <Button type="submit" variant="contained" color="primary" fullWidth>
-        Deposit
+        Withdraw
       </Button>
       {status && (
         <Alert severity={status.type} sx={{ mt: 2 }}>
@@ -52,4 +52,4 @@ function DepositForm() {
   );
 }
 
-export default DepositForm;
+export default WithdrawForm;

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Box, Typography, IconButton, Paper, Fade, Tabs, Tab } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AllCoinList from "../components/AllCoinList";
@@ -17,8 +17,97 @@ function Market() {
   const [selectedCoin, setSelectedCoin] = useState(DEFAULT_COIN);
   const [showCoinList, setShowCoinList] = useState(false);
   const [tab, setTab] = useState(0); // 0 = Spot, 1 = Watchlist
+  const [watchlist, setWatchlist] = useState([]);
   const { user } = useContext(UserContext);
   const theme = "dark";
+
+  // Fetch watchlist on mount AND whenever user changes (login/logout)
+  useEffect(() => {
+    if (user) {
+      fetch("/api/watchlist")
+        .then(res => res.json())
+        .then(data => setWatchlist(data.watchlist || []));
+    } else {
+      setWatchlist([]); // clear watchlist on logout
+    }
+  }, [user]);
+
+  // Add or remove from watchlist
+  const handleToggleWatchlist = (coin, isWatched) => {
+    if (!isWatched) {
+      fetch("/api/watchlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ crypto_id: coin.id }),
+      })
+        .then(res => res.json())
+        .then(() => {
+          setWatchlist(watchlist => [
+            ...watchlist,
+            { crypto_id: coin.id, target_price: "", alert_enabled: false },
+          ]);
+        });
+    } else {
+      fetch(`/api/watchlist/${coin.id}`, { method: "DELETE" }).then(() => {
+        setWatchlist(watchlist => watchlist.filter(w => w.crypto_id !== coin.id));
+      });
+    }
+  };
+
+  // Add to watchlist from Watchlist tab (+ button)
+  const handleAddToWatchlist = (coin) => {
+    if (!watchlist.some(w => w.crypto_id === coin.id)) {
+      fetch("/api/watchlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ crypto_id: coin.id }),
+      })
+        .then(res => res.json())
+        .then(() => {
+          setWatchlist(watchlist => [
+            ...watchlist,
+            { crypto_id: coin.id, target_price: "", alert_enabled: false },
+          ]);
+        });
+    }
+  };
+
+  // Remove from watchlist (for Watchlist tab)
+  const handleRemoveFromWatchlist = (crypto_id) => {
+    fetch(`/api/watchlist/${crypto_id}`, { method: "DELETE" }).then(() => {
+      setWatchlist(watchlist => watchlist.filter(w => w.crypto_id !== crypto_id));
+    });
+  };
+
+  // Update target price
+  const handleTargetPriceChange = (crypto_id, price) => {
+    fetch(`/api/watchlist/${crypto_id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target_price: price }),
+    }).then(() => {
+      setWatchlist(watchlist =>
+        watchlist.map(w =>
+          w.crypto_id === crypto_id ? { ...w, target_price: price } : w
+        )
+      );
+    });
+  };
+
+  // Toggle alert
+  const handleAlertToggle = (crypto_id, enabled) => {
+    fetch(`/api/watchlist/${crypto_id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ alert_enabled: enabled }),
+    }).then(() => {
+      setWatchlist(watchlist =>
+        watchlist.map(w =>
+          w.crypto_id === crypto_id ? { ...w, alert_enabled: enabled } : w
+        )
+      );
+    });
+  };
 
   const handlePillClick = () => setShowCoinList(true);
   const handleCloseCoinList = () => setShowCoinList(false);
@@ -82,9 +171,10 @@ function Market() {
               maxWidth: 480,
               zIndex: 1400,
               borderLeft: "1px solid #404153",
-              background: "var(--background-color)",
+              background: "#23272f", // solid, not transparent
               overflow: "auto",
               display: showCoinList ? "block" : "none",
+              borderRadius: 4,
               '&::-webkit-scrollbar': {
                 width: 8,
                 background: theme === "dark" ? "#23242a" : "#f0f0f0",
@@ -101,7 +191,7 @@ function Market() {
                 <CloseIcon />
               </IconButton>
             </Box>
-            {/* Tabs for Spot/Watchlist (Spot left, Watchlist right) */}
+            {/* Tabs for Spot/Watchlist */}
             <Tabs value={tab} onChange={(_, v) => setTab(v)} centered>
               <Tab label="Spot" />
               <Tab label="Watchlist" />
@@ -109,11 +199,22 @@ function Market() {
             <Box sx={{ p: 2 }}>
               {tab === 0 ? (
                 <AllCoinList
-                  onSelectCoin={(coin) => setSelectedCoin(coin)}
+                  onSelectCoin={setSelectedCoin}
                   selectedCoin={selectedCoin}
+                  watchlist={watchlist}
+                  onToggleWatchlist={handleToggleWatchlist}
                 />
               ) : (
-                <Watchlist theme={theme} />
+                <Watchlist
+                  theme={theme}
+                  onSelectCoin={setSelectedCoin}
+                  selectedCoin={selectedCoin}
+                  coinsToWatch={watchlist}
+                  onRemove={handleRemoveFromWatchlist}
+                  onTargetPriceChange={handleTargetPriceChange}
+                  onAlertToggle={handleAlertToggle}
+                  onAddToWatchlist={handleAddToWatchlist}
+                />
               )}
             </Box>
           </Paper>

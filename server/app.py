@@ -32,7 +32,9 @@ api.add_resource(CryptoListResource, '/api/cryptos')
 api.add_resource(
     WatchlistMarketResource,
     '/api/market/watchlist',
-    '/api/market/watchlist/<int:crypto_id>'
+    '/api/market/watchlist/<int:crypto_id>',
+    '/api/watchlist',                
+    '/api/watchlist/<int:crypto_id>'
 )
 api.add_resource(
     TradeMarketResource,

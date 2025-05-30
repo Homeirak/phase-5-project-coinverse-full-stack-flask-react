@@ -8,19 +8,38 @@ export function DataProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Fetch the coin list from your backend (not the seed file)
-    fetch("/api/cryptos") // <-- You need to implement this endpoint if not present
+    // 1. Fetch cryptos from your backend to get internal DB IDs + coingecko IDs
+    fetch("/api/cryptos")
       .then(res => res.json())
       .then(cryptoList => {
-        // 2. Get coingecko_ids
-        const ids = cryptoList.map(c => c.coingecko_id).filter(Boolean);
-        // 3. Join them into a string
-        const idsString = ids.join(",");
-        // 4. Fetch live data from CoinGecko
-        return fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${idsString}`);
+        // Create a mapping of coingecko_id → full DB crypto info (including numeric id)
+        const idMap = Object.fromEntries(
+          cryptoList.map(c => [c.coingecko_id, { id: c.id, symbol: c.symbol, name: c.name, image_url: c.image_url }])
+        );
+
+        const coingeckoIds = Object.keys(idMap);
+        const idsString = coingeckoIds.join(",");
+
+        // 2. Fetch live data from CoinGecko
+        return fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${idsString}`)
+          .then(res => res.json())
+          .then(marketData => {
+            // 3. Merge internal ID into each coin object
+            const merged = marketData.map(coin => {
+              const local = idMap[coin.id]; // CoinGecko returns coingecko_id as `coin.id`
+              return {
+                ...coin,
+                id: local.id,                  // ✅ your DB ID (used in PATCH/DELETE)
+                coingecko_id: coin.id,         // ✅ keep CoinGecko ID separately
+                symbol: local.symbol,          // Optional override
+                name: local.name,
+                image_url: local.image_url || coin.image,
+              };
+            });
+
+            setCoins(merged);
+          });
       })
-      .then(res => res.json())
-      .then(setCoins)
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);

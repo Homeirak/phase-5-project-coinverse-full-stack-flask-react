@@ -1,9 +1,9 @@
 # Marketroute.py
 
 import logging
-from flask import session, request
+from flask import session, request, jsonify
 from flask_restful import Resource
-from models import User, Crypto, Holding, Trade, Watchlist, PortfolioSnapshot
+from models import User, Crypto, Holding, Trade, Watchlist, PortfolioSnapshot, db
 from config import db, api
 from datetime import datetime
 import requests
@@ -63,20 +63,28 @@ class WatchlistMarketResource(Resource):
             watch = Watchlist.query.filter_by(user_id=user_id, crypto_id=crypto_id).first()
             if not watch:
                 return {'error': 'Not found'}, 404
+            crypto = Crypto.query.get(watch.crypto_id)
             return {
-                "crypto_id": watch.crypto_id,
+                "crypto_id": crypto.coingecko_id if crypto else None,
                 "target_price": watch.target_price,
                 "alert_enabled": watch.alert_enabled
             }
         else:
-            watchlist = Watchlist.query.filter_by(user_id=user_id).all()
+            # JOIN Watchlist and Crypto to get coingecko_id for each entry
+            watchlist = (
+                db.session.query(Watchlist, Crypto)
+                .join(Crypto, Watchlist.crypto_id == Crypto.id)
+                .filter(Watchlist.user_id == user_id)
+                .all()
+            )
             return {
                 "watchlist": [
                     {
                         "crypto_id": w.crypto_id,
                         "target_price": w.target_price,
                         "alert_enabled": w.alert_enabled
-                    } for w in watchlist
+                    }
+                    for w, crypto in watchlist
                 ]
             }
 
